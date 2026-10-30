@@ -56,6 +56,9 @@
     #include <stdio.h>
 #elif defined (__hpux)
     #include <unistd.h>
+#elif defined (__QNX__)
+    #include <unistd.h>
+    #include <sys/sockio.h>
 #else
     #error Teach me how to build on this system
 #endif
@@ -387,7 +390,7 @@ void Receiver::sync( void )
         }
     }
 #else
-    int result = recvfrom( _so, (caddr_t)_buffer, _buffer_size, 0, 0, &size );
+    int result = recvfrom( _so, (caddr_t)_buffer, _buffer_size, 0, 0, (socklen_t *)&size );
     if (result<0)
     {
         OSG_NOTICE<<"Warning: Receiver::sync() recvfrom(..) failed, errno="<<errno<<std::endl;
@@ -398,7 +401,7 @@ void Receiver::sync( void )
     {
         if( FD_ISSET( _so, &fdset ) )
         {
-            recvfrom( _so, (caddr_t)_buffer, _buffer_size, 0, 0, &size );
+            recvfrom( _so, (caddr_t)_buffer, _buffer_size, 0, 0, (socklen_t *)&size );
         }
     }
 #endif

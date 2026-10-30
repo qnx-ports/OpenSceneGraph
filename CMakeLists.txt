@@ -51,7 +51,7 @@ PROJECT(OpenSceneGraph)
 # Additionally, OSG_WINDOWING_SYSTEM is set here for OSX since its
 # value is needed to find the correct version of OpenGL (X11 or Cocoa).
 
-IF(ANDROID)
+IF(ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "QNX")
     SET(OSG_WINDOWING_SYSTEM "None" CACHE STRING "Windowing system type for graphics window creation; options: None.")
 ELSEIF(WIN32 OR MINGW)
     SET(OSG_WINDOWING_SYSTEM "Win32" CACHE STRING "Windowing system type for graphics window creation; options: Win32 or None.")
@@ -299,6 +299,25 @@ IF(UNIX AND NOT ANDROID)
 
 ENDIF()
 
+IF(CMAKE_SYSTEM_NAME STREQUAL "QNX")
+    # Some Unicies need explicit linkage to the Math library or the build fails.
+    FIND_LIBRARY(MATH_LIBRARY m)
+
+    FIND_LIBRARY(DL_LIBRARY dl)
+    IF(NOT DL_LIBRARY)
+        SET(DL_LIBRARY "") # change from NOTFOUND to empty when passed to linker
+    ENDIF()
+
+    IF(OSG_GLES1_AVAILABLE)
+        MESSAGE(FATAL_ERROR "GLESv1 is not provided on QNX.")
+    ELSEIF(OSG_GLES2_AVAILABLE)
+	FIND_PATH(OPENGL_INCLUDE_DIR GLES2/gl2.h PATHS /usr/lib)
+        FIND_LIBRARY(OPENGL_gl_LIBRARY  GLESv2)
+    ELSEIF(OSG_GLES3_AVAILABLE)
+	FIND_PATH(OPENGL_INCLUDE_DIR GLES3/gl3.h PATHS /usr/lib)
+        FIND_LIBRARY(OPENGL_gl_LIBRARY  GLESv3)
+    ENDIF()
+ENDIF()
 
 # Make the headers visible to everything
 IF(NOT ${PROJECT_BINARY_DIR} EQUAL ${PROJECT_SOURCE_DIR})
@@ -655,7 +674,6 @@ IF(ANDROID)
                      ${ANDROID_SYSROOT}/usr/lib)
     ENDIF()
 ENDIF()
-
 
 ################################################################################
 # Set Config header file
